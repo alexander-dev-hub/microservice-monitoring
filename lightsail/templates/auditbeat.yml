@@ -1,0 +1,53 @@
+auditbeat.modules:
+
+
+- module: system
+  datasets:
+    - host
+    - user
+    - package
+    - login
+  period: 1m
+  user.detect_password_changes: true
+
+
+- module: system
+  datasets:
+    - process
+    - socket
+  period: 2s
+
+
+- module: file_integrity
+  paths:
+  - /opt/
+  scan_at_start: true
+  scan_rate_per_sec: 50 MiB
+  file.max_file_size: 100 MiB
+  file.hash_types: [sha1]
+
+
+name: "{{ inventory_hostname }}"
+tags: ["{{ env }}", "lightsail"]
+
+
+processors:
+- add_cloud_metadata: ~
+- add_host_metadata: ~
+
+
+xpack.monitoring.enabled: true
+
+
+output.elasticsearch:
+  hosts: ["{{ elasticsearch_host }}"]
+  username: "{{ elasticsearch_user }}"
+  password: "${ES_PWD}"
+
+
+setup:
+  kibana:
+    host: "{{ kibana_host }}"
+    username: "{{ elasticsearch_user }}"
+    password: "${ES_PWD}"
+  dashboards.enabled: true
